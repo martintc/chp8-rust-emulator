@@ -133,7 +133,7 @@ impl Cpu {
     // call - call subroutine
     // 2nnn
     fn op_2nnn(&mut self, inst: u16) {
-	// need to subtract 2 to get the current instruction being run
+        // need to subtract 2 to get the current instruction being run
         self.stack[self.sp as usize] = self.pc - 2;
         self.sp += 1;
         self.pc = inst & 0x0fff;
@@ -502,31 +502,32 @@ mod tests {
             }
         }
     }
-    
+
     #[test]
     fn test_op_1nnn() {
         let mut cpu = Cpu::new();
         let rom: Vec<u8> = [0x12, 0x00, 0x00, 0xe0].to_vec();
-	cpu.load_rom(rom);
-	assert_eq!(cpu.pc, 0x200);
-	cpu.step();
-	assert_eq!(cpu.pc, 0x200);
+        cpu.load_rom(rom);
+        assert_eq!(cpu.pc, 0x200);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x200);
     }
 
     #[test]
     fn test_op_2nnn_and_00ee() {
-	let mut cpu = Cpu::new();
-	let rom: Vec<u8> = [
-	    0x22, 0x04, // call subroutine at address 0x204
-	    0x00, 0xe0, // fill for address 0x202 and 0x203
-	    0x00, 0xee, // instruction to return
-	].to_vec();
-	cpu.load_rom(rom);
-	cpu.step();
-	assert_eq!(cpu.pc, 0x204);
-	assert_eq!(cpu.sp, 1);
-	assert_eq!(cpu.stack[cpu.sp as usize - 1], 0x200);
-	cpu.step();
-	assert_eq!(cpu.pc, 0x200);
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            0x22, 0x04, // call subroutine at address 0x204
+            0x00, 0xe0, // fill for address 0x202 and 0x203
+            0x00, 0xee, // instruction to return
+        ]
+        .to_vec();
+        cpu.load_rom(rom);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x204);
+        assert_eq!(cpu.sp, 1);
+        assert_eq!(cpu.stack[cpu.sp as usize - 1], 0x200);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x200);
     }
 }
