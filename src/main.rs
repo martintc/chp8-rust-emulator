@@ -1,6 +1,6 @@
 use clap::Parser;
-use std::fs::File;
 use std::fs::read;
+use std::fs::File;
 
 mod cpu;
 
@@ -15,16 +15,16 @@ fn main() {
     let args = Args::parse();
 
     if args.rom_path.is_empty() {
-	return;
+        return;
     }
-    
+
     let mut cpu: cpu::Cpu = cpu::Cpu::new();
 
     println!("Loading rom.....");
     let rom = if let Ok(bytes_read) = std::fs::read(args.rom_path.as_str()) {
-	bytes_read
+        bytes_read
     } else {
-	panic!("unable to read the provided rom....");
+        panic!("unable to read the provided rom....");
     };
 
     cpu.load_rom(rom);
@@ -32,7 +32,6 @@ fn main() {
     println!("rom is loaded....");
 
     loop {
-	cpu.step();
+        cpu.step();
     }
-    
 }
