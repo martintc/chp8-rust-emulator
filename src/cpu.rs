@@ -487,5 +487,26 @@ impl Cpu {
 	    self.reg[idx as usize] = self.ram[self.i as usize + idx];
 	}
     }
-    
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_op_00e0() {
+	let mut cpu = Cpu::new();
+	cpu.vram = [[0x1; 64]; 32];
+	for i in 0..cpu.vram.len() {
+	    for j in 0..cpu.vram[0].len() {
+		assert_eq!(cpu.vram[i][j], 0x1);
+	    }
+	}
+	cpu.op_00e0(0x00e0);
+	for i in 0..cpu.vram.len() {
+	    for j in 0..cpu.vram[0].len() {
+		assert_eq!(cpu.vram[i][j], 0x0);
+	    }
+	}
+    }
 }
