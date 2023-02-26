@@ -53,7 +53,6 @@ impl Cpu {
 	let mut inst: u16 = msb << 8;
 	inst |= lsb;
 	self.pc += 1;
-	println!("{:x}", inst);
 	match inst & 0xf000 {
 	    0x0000 => {
 		match inst & 0x00ff {
