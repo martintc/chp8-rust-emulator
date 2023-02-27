@@ -530,4 +530,24 @@ mod tests {
         cpu.step();
         assert_eq!(cpu.pc, 0x200);
     }
+
+    #[test]
+    fn test_op_3xkk() {
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            // address 0x200
+            // skp if not equal instruction
+            0x31, 0x11, // address 0x202
+            // instruction to skip,, filler instruction
+            0x00, 0x00, // 0x204
+            // instruction to execute next
+            0x00, 0x00,
+        ]
+        .to_vec();
+        cpu.load_rom(rom);
+        cpu.reg[1] = 0x11;
+        assert_eq!(cpu.pc, 0x200);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x204);
+    }
 }
