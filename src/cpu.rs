@@ -244,11 +244,11 @@ impl Cpu {
             self.reg[0xf] = 1;
         }
 
-	let x = std::num::Wrapping(self.reg[vx as usize]);
-	let y = std::num::Wrapping(self.reg[vy as usize]);
-	let z = x - y;
+        let x = std::num::Wrapping(self.reg[vx as usize]);
+        let y = std::num::Wrapping(self.reg[vy as usize]);
+        let z = x - y;
         // self.reg[vx as usize] -= self.reg[vy as usize];
-	self.reg[vx as usize] = z.0;
+        self.reg[vx as usize] = z.0;
     }
 
     // shr - shift right by 1
@@ -270,10 +270,10 @@ impl Cpu {
         if self.reg[vx as usize] > self.reg[vy as usize] {
             self.reg[0xf] = 1;
         }
-	let x = std::num::Wrapping(self.reg[vx as usize]);
-	let y = std::num::Wrapping(self.reg[vy as usize]);
+        let x = std::num::Wrapping(self.reg[vx as usize]);
+        let y = std::num::Wrapping(self.reg[vy as usize]);
         // self.reg[vx as usize] = self.reg[vy as usize] - self.reg[vx as usize];
-	self.reg[vx as usize] = (y - x).0;
+        self.reg[vx as usize] = (y - x).0;
     }
 
     // shl
@@ -645,7 +645,7 @@ mod tests {
         let rom: Vec<u8> = [
             // address 0x200
             // load value 0xff into register 2
-            0x72, 0xff, // address 0x202
+            0x62, 0xff, // address 0x202
             // load value in register 2 to register 1
             0x81, 0x20,
         ]
@@ -670,9 +670,9 @@ mod tests {
         let rom: Vec<u8> = [
             // address 0x200
             // load 0x01 into register 1
-            0x71, 0x01, // address 0x202
+            0x61, 0x01, // address 0x202
             // load 0x02 into register 2
-            0x72, 0x02, // address 204
+            0x62, 0x02, // address 204
             // reg[x] ^ reg[y] = reg[x]
             0x81, 0x21,
         ]
@@ -701,9 +701,9 @@ mod tests {
         let rom: Vec<u8> = [
             // address 0x200
             // load value 0x01 into register 1
-            0x71, 0x01, // address 0x202
+            0x61, 0x01, // address 0x202
             // load value 0x01 into register 2
-            0x72, 0x01, // address 0x204
+            0x62, 0x01, // address 0x204
             // vx & vy = vx
             0x81, 0x22,
         ]
@@ -732,9 +732,9 @@ mod tests {
         let rom: Vec<u8> = [
             // address 0x200
             // load value 0x01 into register 1
-            0x71, 0x01, // address 0x202
+            0x61, 0x01, // address 0x202
             // load value 0x01 into register 2
-            0x72, 0x01, // address 0x204
+            0x62, 0x01, // address 0x204
             // vx ^ vy = vx
             0x81, 0x23,
         ]
@@ -756,276 +756,559 @@ mod tests {
         assert_eq!(cpu.reg[1], (0x01 ^ 0x01));
         assert_eq!(cpu.reg[2], 0x01);
     }
-    
+
     #[test]
     fn test_op_8xy4_carry_flag() {
-	let mut cpu = Cpu::new();
-	let rom: Vec<u8> = [
-	    // address 0x200
-	    // load 0x01 into register 1
-	    0x71, 0x01,
-	    // address 0x202
-	    // load 0xff into register 2
-	    0x72, 0xff,
-	    // address 0x204
-	    // perform instruction 8xy4 on registers 1 and 2
-	    0x81, 0x24,
-	].to_vec();
-	cpu.load_rom(rom);
-	assert_eq!(cpu.pc, 0x200);
-	assert_eq!(cpu.reg[1], 0x00);
-	assert_eq!(cpu.reg[2], 0x00);
-	cpu.step();
-	assert_eq!(cpu.pc, 0x202);
-	assert_eq!(cpu.reg[1], 0x01);
-	cpu.step();
-	assert_eq!(cpu.pc, 0x204);
-	assert_eq!(cpu.reg[2], 0xff);
-	cpu.step();
-	assert_eq!(cpu.reg[1], 0x00);
-	assert_eq!(cpu.reg[0xf], 0x01);
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            // address 0x200
+            // load 0x01 into register 1
+            0x61, 0x01, // address 0x202
+            // load 0xff into register 2
+            0x62, 0xff,
+            // address 0x204
+            // perform instruction 8xy4 on registers 1 and 2
+            0x81, 0x24,
+        ]
+        .to_vec();
+        cpu.load_rom(rom);
+        assert_eq!(cpu.pc, 0x200);
+        assert_eq!(cpu.reg[1], 0x00);
+        assert_eq!(cpu.reg[2], 0x00);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x202);
+        assert_eq!(cpu.reg[1], 0x01);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x204);
+        assert_eq!(cpu.reg[2], 0xff);
+        cpu.step();
+        assert_eq!(cpu.reg[1], 0x00);
+        assert_eq!(cpu.reg[0xf], 0x01);
     }
 
     #[test]
     fn test_op_8xy4_no_carry_flag() {
-	let mut cpu = Cpu::new();
-	let rom: Vec<u8> = [
-	    // address 0x200
-	    // load 0x01 into register 1
-	    0x71, 0x01,
-	    // address 0x202
-	    // load 0xff into register 2
-	    0x72, 0x08,
-	    // address 0x204
-	    // perform instruction 8xy4 on registers 1 and 2
-	    0x81, 0x24,
-	].to_vec();
-	cpu.load_rom(rom);
-	assert_eq!(cpu.pc, 0x200);
-	assert_eq!(cpu.reg[1], 0x00);
-	assert_eq!(cpu.reg[2], 0x00);
-	cpu.step();
-	assert_eq!(cpu.pc, 0x202);
-	assert_eq!(cpu.reg[1], 0x01);
-	cpu.step();
-	assert_eq!(cpu.pc, 0x204);
-	assert_eq!(cpu.reg[2], 0x08);
-	cpu.step();
-	assert_eq!(cpu.reg[1], 0x09);
-	assert_eq!(cpu.reg[0xf], 0x00);
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            // address 0x200
+            // load 0x01 into register 1
+            0x61, 0x01, // address 0x202
+            // load 0xff into register 2
+            0x62, 0x08,
+            // address 0x204
+            // perform instruction 8xy4 on registers 1 and 2
+            0x81, 0x24,
+        ]
+        .to_vec();
+        cpu.load_rom(rom);
+        assert_eq!(cpu.pc, 0x200);
+        assert_eq!(cpu.reg[1], 0x00);
+        assert_eq!(cpu.reg[2], 0x00);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x202);
+        assert_eq!(cpu.reg[1], 0x01);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x204);
+        assert_eq!(cpu.reg[2], 0x08);
+        cpu.step();
+        assert_eq!(cpu.reg[1], 0x09);
+        assert_eq!(cpu.reg[0xf], 0x00);
     }
 
     #[test]
     fn test_op_8xy5_carry_flag() {
-	let mut cpu = Cpu::new();
-	let rom: Vec<u8> = [
-	    // address 0x200
-	    // load 0x02 into register 1
-	    0x71, 0x02,
-	    // address 0x202
-	    // load 0x01 into register 2
-	    0x72, 0x01,
-	    // address 0x204
-	    // perform 8xy5 on registers 1 and 2
-	    0x81, 0x25,
-	].to_vec();
-	cpu.load_rom(rom);
-	assert_eq!(cpu.pc, 0x200);
-	assert_eq!(cpu.reg[1], 0x00);
-	assert_eq!(cpu.reg[2], 0x00);
-	cpu.step();
-	assert_eq!(cpu.pc, 0x202);
-	assert_eq!(cpu.reg[1], 0x02);
-	cpu.step();
-	assert_eq!(cpu.pc, 0x204);
-	assert_eq!(cpu.reg[2], 0x01);
-	assert_eq!(cpu.reg[0xf], 0x00);
-	cpu.step();
-	assert_eq!(cpu.reg[1], 0x01);
-	assert_eq!(cpu.reg[0xf], 0x01);
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            // address 0x200
+            // load 0x02 into register 1
+            0x61, 0x02, // address 0x202
+            // load 0x01 into register 2
+            0x62, 0x01, // address 0x204
+            // perform 8xy5 on registers 1 and 2
+            0x81, 0x25,
+        ]
+        .to_vec();
+        cpu.load_rom(rom);
+        assert_eq!(cpu.pc, 0x200);
+        assert_eq!(cpu.reg[1], 0x00);
+        assert_eq!(cpu.reg[2], 0x00);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x202);
+        assert_eq!(cpu.reg[1], 0x02);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x204);
+        assert_eq!(cpu.reg[2], 0x01);
+        assert_eq!(cpu.reg[0xf], 0x00);
+        cpu.step();
+        assert_eq!(cpu.reg[1], 0x01);
+        assert_eq!(cpu.reg[0xf], 0x01);
     }
 
     #[test]
     fn test_op_8xy5_no_carry_flag() {
-	let mut cpu = Cpu::new();
-	let rom: Vec<u8> = [
-	    // address 0x200
-	    // load 0x02 into register 1
-	    0x71, 0x02,
-	    // address 0x202
-	    // load 0x01 into register 2
-	    0x72, 0x03,
-	    // address 0x204
-	    // perform 8xy5 on registers 1 and 2
-	    0x81, 0x25,
-	].to_vec();
-	cpu.load_rom(rom);
-	assert_eq!(cpu.pc, 0x200);
-	assert_eq!(cpu.reg[1], 0x00);
-	assert_eq!(cpu.reg[2], 0x00);
-	cpu.step();
-	assert_eq!(cpu.pc, 0x202);
-	assert_eq!(cpu.reg[1], 0x02);
-	cpu.step();
-	assert_eq!(cpu.pc, 0x204);
-	assert_eq!(cpu.reg[2], 0x03);
-	assert_eq!(cpu.reg[0xf], 0x00);
-	cpu.step();
-	assert_eq!(cpu.reg[1], 0xff);
-	assert_eq!(cpu.reg[0xf], 0x00);
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            // address 0x200
+            // load 0x02 into register 1
+            0x61, 0x02, // address 0x202
+            // load 0x01 into register 2
+            0x62, 0x03, // address 0x204
+            // perform 8xy5 on registers 1 and 2
+            0x81, 0x25,
+        ]
+        .to_vec();
+        cpu.load_rom(rom);
+        assert_eq!(cpu.pc, 0x200);
+        assert_eq!(cpu.reg[1], 0x00);
+        assert_eq!(cpu.reg[2], 0x00);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x202);
+        assert_eq!(cpu.reg[1], 0x02);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x204);
+        assert_eq!(cpu.reg[2], 0x03);
+        assert_eq!(cpu.reg[0xf], 0x00);
+        cpu.step();
+        assert_eq!(cpu.reg[1], 0xff);
+        assert_eq!(cpu.reg[0xf], 0x00);
     }
 
     #[test]
     fn test_op_8xy6_no_set_vf() {
-	let mut cpu = Cpu::new();
-	let rom: Vec<u8> = [
-	    // address 0x200
-	    // load value 0x04 into register 1
-	    0x71, 0x04,
-	    // address 0x202
-	    // perform shr 8xy6 operation
-	    0x81, 0x06,
-	].to_vec();
-	cpu.load_rom(rom);
-	assert_eq!(cpu.pc, 0x200);
-	cpu.step();
-	assert_eq!(cpu.pc, 0x202);
-	assert_eq!(cpu.reg[1], 0x04);
-	cpu.step();
-	assert_eq!(cpu.pc, 0x204);
-	assert_eq!(cpu.reg[1], 0x02);
-	assert_eq!(cpu.reg[0xf], 0x00);
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            // address 0x200
+            // load value 0x04 into register 1
+            0x61, 0x04, // address 0x202
+            // perform shr 8xy6 operation
+            0x81, 0x06,
+        ]
+        .to_vec();
+        cpu.load_rom(rom);
+        assert_eq!(cpu.pc, 0x200);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x202);
+        assert_eq!(cpu.reg[1], 0x04);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x204);
+        assert_eq!(cpu.reg[1], 0x02);
+        assert_eq!(cpu.reg[0xf], 0x00);
     }
 
     #[test]
     fn test_op_8xy6_set_vf() {
-	let mut cpu = Cpu::new();
-	let rom: Vec<u8> = [
-	    // address 0x200
-	    // load value 0x03 into register 1
-	    0x71, 0x03,
-	    // address 0x202
-	    // perform shr 8xy6 operation
-	    0x81, 0x06,
-	].to_vec();
-	cpu.load_rom(rom);
-	assert_eq!(cpu.pc, 0x200);
-	cpu.step();
-	assert_eq!(cpu.pc, 0x202);
-	assert_eq!(cpu.reg[1], 0x03);
-	cpu.step();
-	assert_eq!(cpu.pc, 0x204);
-	assert_eq!(cpu.reg[1], 0x01);
-	assert_eq!(cpu.reg[0xf], 0x01);
-    }    
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            // address 0x200
+            // load value 0x03 into register 1
+            0x61, 0x03, // address 0x202
+            // perform shr 8xy6 operation
+            0x81, 0x06,
+        ]
+        .to_vec();
+        cpu.load_rom(rom);
+        assert_eq!(cpu.pc, 0x200);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x202);
+        assert_eq!(cpu.reg[1], 0x03);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x204);
+        assert_eq!(cpu.reg[1], 0x01);
+        assert_eq!(cpu.reg[0xf], 0x01);
+    }
 
     #[test]
     fn test_op_8xy7_no_borrow() {
-	let mut cpu = Cpu::new();
-	let rom: Vec<u8> = [
-	    // address 0x200
-	    // load value 0x01 into register 1
-	    0x71, 0x01,
-	    // address 0x202
-	    // load value 0x05 into register 2
-	    0x72, 0x05,
-	    // address 0x204
-	    // perform 8xy7 on registers 1 and 2
-	    0x81, 0x27
-	].to_vec();
-	cpu.load_rom(rom);
-	assert_eq!(cpu.pc, 0x200);
-	assert_eq!(cpu.reg[1], 0x00);
-	assert_eq!(cpu.reg[2], 0x00);
-	assert_eq!(cpu.reg[0xf], 0x00);
-	cpu.step();
-	assert_eq!(cpu.pc, 0x202);
-	assert_eq!(cpu.reg[1], 0x01);
-	cpu.step();
-	assert_eq!(cpu.pc, 0x204);
-	assert_eq!(cpu.reg[2], 0x05);
-	cpu.step();
-	assert_eq!(cpu.pc, 0x206);
-	assert_eq!(cpu.reg[1], 0x04);
-	assert_eq!(cpu.reg[0xf], 0x00);
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            // address 0x200
+            // load value 0x01 into register 1
+            0x61, 0x01, // address 0x202
+            // load value 0x05 into register 2
+            0x62, 0x05, // address 0x204
+            // perform 8xy7 on registers 1 and 2
+            0x81, 0x27,
+        ]
+        .to_vec();
+        cpu.load_rom(rom);
+        assert_eq!(cpu.pc, 0x200);
+        assert_eq!(cpu.reg[1], 0x00);
+        assert_eq!(cpu.reg[2], 0x00);
+        assert_eq!(cpu.reg[0xf], 0x00);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x202);
+        assert_eq!(cpu.reg[1], 0x01);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x204);
+        assert_eq!(cpu.reg[2], 0x05);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x206);
+        assert_eq!(cpu.reg[1], 0x04);
+        assert_eq!(cpu.reg[0xf], 0x00);
     }
 
     #[test]
     fn test_op_8xy7_borrow() {
-	let mut cpu = Cpu::new();
-	let rom: Vec<u8> = [
-	    // address 0x200
-	    // load value 0x06 into register 1
-	    0x71, 0x06,
-	    // address 0x202
-	    // load value 0x05 into register 2
-	    0x72, 0x05,
-	    // address 0x204
-	    // perform 8xy7 on registers 1 and 2
-	    0x81, 0x27
-	].to_vec();
-	cpu.load_rom(rom);
-	assert_eq!(cpu.pc, 0x200);
-	assert_eq!(cpu.reg[1], 0x00);
-	assert_eq!(cpu.reg[2], 0x00);
-	assert_eq!(cpu.reg[0xf], 0x00);
-	cpu.step();
-	assert_eq!(cpu.pc, 0x202);
-	assert_eq!(cpu.reg[1], 0x06);
-	cpu.step();
-	assert_eq!(cpu.pc, 0x204);
-	assert_eq!(cpu.reg[2], 0x05);
-	cpu.step();
-	assert_eq!(cpu.pc, 0x206);
-	assert_eq!(cpu.reg[1], 0xff);
-	assert_eq!(cpu.reg[0xf], 0x01);
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            // address 0x200
+            // load value 0x06 into register 1
+            0x61, 0x06, // address 0x202
+            // load value 0x05 into register 2
+            0x62, 0x05, // address 0x204
+            // perform 8xy7 on registers 1 and 2
+            0x81, 0x27,
+        ]
+        .to_vec();
+        cpu.load_rom(rom);
+        assert_eq!(cpu.pc, 0x200);
+        assert_eq!(cpu.reg[1], 0x00);
+        assert_eq!(cpu.reg[2], 0x00);
+        assert_eq!(cpu.reg[0xf], 0x00);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x202);
+        assert_eq!(cpu.reg[1], 0x06);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x204);
+        assert_eq!(cpu.reg[2], 0x05);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x206);
+        assert_eq!(cpu.reg[1], 0xff);
+        assert_eq!(cpu.reg[0xf], 0x01);
     }
-    
+
     #[test]
     fn test_op_8xye_no_set_vf() {
-	let mut cpu = Cpu::new();
-	let rom: Vec<u8> = [
-	    // address 0x200
-	    // load value 0x4 into register 1
-	    0x71, 0x04,
-	    // address 0x202
-	    // shift left register 1
-	    0x81, 0x0e,
-	].to_vec();
-	cpu.load_rom(rom);
-	assert_eq!(cpu.pc, 0x200);
-	assert_eq!(cpu.reg[1], 0x00);
-	assert_eq!(cpu.reg[0xf], 0x00);
-	cpu.step();
-	assert_eq!(cpu.pc, 0x202);
-	assert_eq!(cpu.reg[1], 0x04);
-	cpu.step();
-	assert_eq!(cpu.pc, 0x204);
-	assert_eq!(cpu.reg[1], 0x08);
-	assert_eq!(cpu.reg[0xf], 0x00);
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            // address 0x200
+            // load value 0x4 into register 1
+            0x61, 0x04, // address 0x202
+            // shift left register 1
+            0x81, 0x0e,
+        ]
+        .to_vec();
+        cpu.load_rom(rom);
+        assert_eq!(cpu.pc, 0x200);
+        assert_eq!(cpu.reg[1], 0x00);
+        assert_eq!(cpu.reg[0xf], 0x00);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x202);
+        assert_eq!(cpu.reg[1], 0x04);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x204);
+        assert_eq!(cpu.reg[1], 0x08);
+        assert_eq!(cpu.reg[0xf], 0x00);
     }
 
     #[test]
     fn test_op_8xye_set_vf() {
-	let mut cpu = Cpu::new();
-	let rom: Vec<u8> = [
-	    // address 0x200
-	    // load value 0x81 into register 1
-	    0x71, 0x81,
-	    // address 0x202
-	    // shift left register 1
-	    0x81, 0x0e,
-	].to_vec();
-	cpu.load_rom(rom);
-	assert_eq!(cpu.pc, 0x200);
-	assert_eq!(cpu.reg[1], 0x00);
-	assert_eq!(cpu.reg[0xf], 0x00);
-	cpu.step();
-	assert_eq!(cpu.pc, 0x202);
-	assert_eq!(cpu.reg[1], 0x81);
-	cpu.step();
-	assert_eq!(cpu.pc, 0x204);
-	assert_eq!(cpu.reg[1], 0x02);
-	assert_eq!(cpu.reg[0xf], 0x01);
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            // address 0x200
+            // load value 0x81 into register 1
+            0x61, 0x81, // address 0x202
+            // shift left register 1
+            0x81, 0x0e,
+        ]
+        .to_vec();
+        cpu.load_rom(rom);
+        assert_eq!(cpu.pc, 0x200);
+        assert_eq!(cpu.reg[1], 0x00);
+        assert_eq!(cpu.reg[0xf], 0x00);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x202);
+        assert_eq!(cpu.reg[1], 0x81);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x204);
+        assert_eq!(cpu.reg[1], 0x02);
+        assert_eq!(cpu.reg[0xf], 0x01);
+    }
+
+    #[test]
+    fn test_op_9xy0_skip_instruction() {
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            // address 0x200
+            // load 0x01 into register 1
+            0x61, 0x01, // address 0x202
+            // load 0x02 into register 2
+            0x62, 0x02,
+            // address 0x204
+            // perform equality check on register 1 and 2
+            0x91, 0x20, // address 0x206
+            // instruction to skip
+            0x61, 0x04, // address 0x208
+            // load 0x02 into register 1
+            0x61, 0x02,
+        ]
+        .to_vec();
+        cpu.load_rom(rom);
+        assert_eq!(cpu.pc, 0x200);
+        assert_eq!(cpu.reg[1], 0x00);
+        assert_eq!(cpu.reg[2], 0x00);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x202);
+        assert_eq!(cpu.reg[1], 0x01);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x204);
+        assert_eq!(cpu.reg[2], 0x02);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x208);
+        assert_eq!(cpu.reg[1], 0x01);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x20a);
+        assert_eq!(cpu.reg[1], 0x02);
+    }
+
+    #[test]
+    fn test_op_9xy0_no_skip_instruction() {
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            // address 0x200
+            // load 0x01 into register 1
+            0x61, 0x01, // address 0x202
+            // load 0x01 into register 2
+            0x62, 0x01,
+            // address 0x204
+            // perform equality check on register 1 and 2
+            0x91, 0x20, // address 0x206
+            // instruction to skip
+            0x61, 0x04, // address 0x208
+            // load 0x02 into register 1
+            0x61, 0x02,
+        ]
+        .to_vec();
+        cpu.load_rom(rom);
+        assert_eq!(cpu.pc, 0x200);
+        assert_eq!(cpu.reg[1], 0x00);
+        assert_eq!(cpu.reg[2], 0x00);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x202);
+        assert_eq!(cpu.reg[1], 0x01);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x204);
+        assert_eq!(cpu.reg[2], 0x01);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x206);
+        assert_eq!(cpu.reg[1], 0x01);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x208);
+        assert_eq!(cpu.reg[1], 0x04);
+    }
+
+    #[test]
+    fn test_op_annn() {
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            // addres 0x200
+            // perform op annn
+            0xa1, 0x11,
+        ]
+        .to_vec();
+        cpu.load_rom(rom);
+        assert_eq!(cpu.i, 0x0000);
+        cpu.step();
+        assert_eq!(cpu.i, 0x0111);
+    }
+
+    #[test]
+    fn test_op_bnnn() {
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            // address 0x200
+            // load 0x02 into register 0
+            0x60, 0x02, // address 0x202
+            // jump to v0 + nnn,
+            0xb2, 0x04,
+            // address 0x204
+            // load register 1 with 0x2, should be jumped overtime
+            0x61, 0x02,
+            // address 0x206
+            // load register 1 with 0x4, should be jumped to
+            0x61, 0x04,
+        ]
+        .to_vec();
+        cpu.load_rom(rom);
+        assert_eq!(cpu.pc, 0x200);
+        assert_eq!(cpu.reg[0], 0x00);
+        assert_eq!(cpu.reg[1], 0x00);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x202);
+        assert_eq!(cpu.reg[0], 0x02);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x206);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x208);
+        assert_eq!(cpu.reg[1], 0x04);
+    }
+
+    #[test]
+    fn test_op_fx07() {
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            // address 0x200
+            // set vx to dt
+            0xf1, 0x07,
+        ]
+        .to_vec();
+        cpu.load_rom(rom);
+        cpu.dt = 0x01;
+        assert_eq!(cpu.pc, 0x200);
+        assert_eq!(cpu.reg[1], 0x00);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x202);
+        assert_eq!(cpu.reg[1], 0x01);
+    }
+
+    #[test]
+    fn test_op_fx15() {
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            // address 0x200
+            // set vx to dt
+            0xf1, 0x15,
+        ]
+        .to_vec();
+        cpu.load_rom(rom);
+        cpu.reg[1] = 0x01;
+        assert_eq!(cpu.pc, 0x200);
+        assert_eq!(cpu.dt, 0x00);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x202);
+        assert_eq!(cpu.dt, 0x01);
+    }
+
+    #[test]
+    fn test_op_fx18() {
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            // address 0x200
+            // set vx to dt
+            0xf1, 0x18,
+        ]
+        .to_vec();
+        cpu.load_rom(rom);
+        cpu.reg[1] = 0x01;
+        assert_eq!(cpu.pc, 0x200);
+        assert_eq!(cpu.st, 0x00);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x202);
+        assert_eq!(cpu.st, 0x01);
+    }
+
+    #[test]
+    fn test_op_fx1e() {
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            // address 0x200
+            // add contents of vx to index register
+            0xf1, 0x1e,
+        ]
+        .to_vec();
+        cpu.load_rom(rom);
+        cpu.i = 0x01;
+        cpu.reg[1] = 0x01;
+        assert_eq!(cpu.pc, 0x200);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x202);
+        assert_eq!(cpu.i, 0x02);
+    }
+
+    // ld f, vx
+    // set i = location of sprite for digit vx
+    // fx29
+    // pub fn op_fx29(&mut self, inst: u16) {
+    //     let vx = ((inst & 0x0f00) >> 8) as usize;
+    //     let digit = self.reg[vx] as u16;
+    //     // 100 is supposed to be fontsize address
+    //     self.i = 100 + (5 * digit);
+    // }
+
+    // ld b, vx
+    // store BCD representation of Vx in memory locations I, I + 1, I + 2
+    // fx33
+    // pub fn op_fx33(&mut self, inst: u16) {
+    //     let vx = ((inst & 0x0f00) >> 8) as usize;
+    //     let mut val = self.reg[vx];
+    //     self.ram[self.i as usize + 2] = val % 10;
+    //     val /= 10;
+    //     self.ram[self.i as usize + 1] = val % 10;
+    //     val /= 10;
+    //     self.ram[self.i as usize] = val % 10;
+    // }
+
+    #[test]
+    fn test_op_fx55() {
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            // address 0x200
+            // load contents of all register into ram
+            0xff, 0x55,
+        ]
+        .to_vec();
+        cpu.reg[0] = 1;
+        cpu.reg[1] = 1;
+        cpu.reg[2] = 1;
+        cpu.reg[3] = 1;
+        cpu.reg[4] = 1;
+        cpu.reg[5] = 1;
+        cpu.reg[6] = 1;
+        cpu.reg[7] = 1;
+        cpu.reg[8] = 1;
+        cpu.reg[9] = 1;
+        cpu.reg[0xa] = 1;
+        cpu.reg[0xb] = 1;
+        cpu.reg[0xc] = 1;
+        cpu.reg[0xd] = 1;
+        cpu.reg[0xe] = 1;
+        cpu.reg[0xf] = 1;
+        cpu.i = 0x000;
+        cpu.load_rom(rom);
+        assert_eq!(cpu.pc, 0x200);
+        assert_eq!(cpu.ram[cpu.i as usize], 0x00);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x202);
+        for i in 0..15 {
+            assert_eq!(cpu.ram[cpu.i as usize + i], 0x01);
+        }
+    }
+
+    #[test]
+    fn test_op_fx65() {
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            // address 0x200
+            // load contents from memory to registers
+            0xff, 0x65,
+        ]
+        .to_vec();
+        cpu.ram[0] = 1;
+        cpu.ram[1] = 1;
+        cpu.ram[2] = 1;
+        cpu.ram[3] = 1;
+        cpu.ram[4] = 1;
+        cpu.ram[5] = 1;
+        cpu.ram[6] = 1;
+        cpu.ram[7] = 1;
+        cpu.ram[8] = 1;
+        cpu.ram[9] = 1;
+        cpu.ram[0xa] = 1;
+        cpu.ram[0xb] = 1;
+        cpu.ram[0xc] = 1;
+        cpu.ram[0xd] = 1;
+        cpu.ram[0xe] = 1;
+        cpu.ram[0xf] = 1;
+        cpu.load_rom(rom);
+        assert_eq!(cpu.pc, 0x200);
+        assert_eq!(cpu.i, 0x000);
+        for i in 0..15 {
+            assert_eq!(cpu.reg[i], 0x00);
+        }
+        cpu.step();
+        assert_eq!(cpu.pc, 0x202);
+        for i in 0..15 {
+            assert_eq!(cpu.reg[i], 0x01);
+        }
     }
 }
