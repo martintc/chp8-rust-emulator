@@ -569,4 +569,66 @@ mod tests {
         cpu.step();
         assert_eq!(cpu.pc, 0x204);
     }
+
+    #[test]
+    fn test_op_5xy0() {
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            // address 0x200
+            // check values in register 1 and 2
+            0x51, 0x20, // address 0x202
+            // instruction skipped
+            0x00, 0x00, // address 0x204
+            // instruction to be executed next
+            0x12, 00,
+        ]
+        .to_vec();
+        cpu.load_rom(rom);
+        cpu.reg[1] = 1;
+        cpu.reg[2] = 1;
+        assert_eq!(cpu.pc, 0x200);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x204);
+    }
+
+    #[test]
+    fn test_op_6xkk() {
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            // address 0x200
+            // load value into register 1
+            0x61, 0xff, // address 0x202
+            // filler
+            0x12, 0x00,
+        ]
+        .to_vec();
+        cpu.load_rom(rom);
+        assert_eq!(cpu.pc, 0x200);
+        assert_eq!(cpu.reg[1], 0x00);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x202);
+        assert_eq!(cpu.reg[1], 0xff);
+    }
+
+    #[test]
+    fn test_op_7xkk() {
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            // address 0x200
+            // load value 1 into register 1
+            0x61, 0x01, // address 0x202
+            // vx = vx + kk
+            0x71, 0x01,
+        ]
+        .to_vec();
+        cpu.load_rom(rom);
+        assert_eq!(cpu.pc, 0x200);
+        assert_eq!(cpu.reg[1], 0x00);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x202);
+        assert_eq!(cpu.reg[1], 0x01);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x204);
+        assert_eq!(cpu.reg[1], 0x02);
+    }
 }
