@@ -536,9 +536,8 @@ mod tests {
         let mut cpu = Cpu::new();
         let rom: Vec<u8> = [
             // address 0x200
-            // skp if not equal instruction
-            0x31, 0x11, // address 0x202
-            // instruction to skip,, filler instruction
+            // skp if equal instruction
+            0x31, 0x11, // instruction to skip,, filler instruction
             0x00, 0x00, // 0x204
             // instruction to execute next
             0x00, 0x00,
@@ -546,6 +545,26 @@ mod tests {
         .to_vec();
         cpu.load_rom(rom);
         cpu.reg[1] = 0x11;
+        assert_eq!(cpu.pc, 0x200);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x204);
+    }
+
+    #[test]
+    fn test_op_4xkk() {
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            // addres 0x200
+            // ship if not equal instriction
+            0x41, 0x11, // address 0x202
+            // instruction skipped
+            0x00, 0x00,
+            // address 0x204
+            // instruction ran if equal
+        ]
+        .to_vec();
+        cpu.load_rom(rom);
+        cpu.reg[1] = 0x12;
         assert_eq!(cpu.pc, 0x200);
         cpu.step();
         assert_eq!(cpu.pc, 0x204);
