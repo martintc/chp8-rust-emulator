@@ -684,7 +684,7 @@ mod tests {
         assert_eq!(cpu.reg[2], 0x02);
         cpu.step();
         assert_eq!(cpu.pc, 0x206);
-        assert_eq!(cpu.reg[1], (0x01 ^ 0x02));
+        assert_eq!(cpu.reg[1], (0x01 | 0x02));
         assert_eq!(cpu.reg[2], 0x02);
     }
 }
