@@ -1,6 +1,4 @@
 use clap::Parser;
-use std::fs::read;
-use std::fs::File;
 
 mod cpu;
 

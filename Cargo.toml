@@ -1,5 +1,5 @@
 [package]
-name = "Chip8"
+name = "chip8"
 version = "0.1.0"
 edition = "2021"
 author = "Todd Martin"
@@ -8,3 +8,4 @@ author = "Todd Martin"
 
 [dependencies]
 clap = { version = "4.1.6", features = ["derive"] }
+tinyrand = "0.5.0"

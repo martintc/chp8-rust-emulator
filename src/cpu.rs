@@ -1,6 +1,8 @@
 // for reference refer to
 // http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
 
+use tinyrand::{Rand, StdRand};
+
 pub struct Cpu {
     ram: [u8; 0xfff],
     vram: [[u8; 64]; 32],
@@ -11,11 +13,8 @@ pub struct Cpu {
     sp: u8,        // stack pointer
     dt: u8,        // delay timer
     st: u8,        // sound timer
-    keypress: u16, // keypress
     keypad: [u8; 0x10],
-    tone: bool, // tone output enable mode
-    time: isize, // overtime in microseconds
-                // rng: R, // instance of random number generater
+    rand: StdRand,
 }
 
 impl Cpu {
@@ -30,10 +29,8 @@ impl Cpu {
             sp: 0x0,
             dt: 0x0,
             st: 0x0,
-            keypress: 0x0,
             keypad: [0x0; 0x10],
-            tone: false,
-            time: 0x0,
+	    rand: StdRand::default(),
         }
     }
 
@@ -312,11 +309,10 @@ impl Cpu {
     // interpretor generate random number from 0 to 255, which is then ANDed with kk
     // cxkk
     pub fn op_cxkk(&mut self, inst: u16) {
-        // TODO: generate random number
         let vx = (inst & 0x0f00) >> 8;
-        let rand: u8 = 1;
-        let val = inst & 0x00ff;
-        self.reg[vx as usize] = rand & val as u8;
+        let rand: u8 = self.rand.next_u16() as u8;
+        let val = (inst & 0x00ff) as u8;
+        self.reg[vx as usize] = rand & val;
     }
 
     // drw
@@ -382,7 +378,7 @@ impl Cpu {
         self.reg[vx as usize] = self.dt;
     }
 
-    // ld keypress - wait for key press, store the value of the key in vx
+    // ld keypress - wait for key press, stoe the value of the key in vx
     // fx0a
     pub fn op_fx0a(&mut self, inst: u16) {
         let vx = ((inst & 0x0f00) >> 8) as usize;
