@@ -10,9 +10,9 @@ pub struct Cpu {
     i: u16,          // index register
     pc: u16,         // program counter
     stack: [u16; 0x10],
-    sp: u8,        // stack pointer
-    dt: u8,        // delay timer
-    st: u8,        // sound timer
+    sp: u8, // stack pointer
+    dt: u8, // delay timer
+    st: u8, // sound timer
     keypad: [u8; 0x10],
     rand: StdRand,
 }
@@ -30,7 +30,7 @@ impl Cpu {
             dt: 0x0,
             st: 0x0,
             keypad: [0x0; 0x10],
-	    rand: StdRand::default(),
+            rand: StdRand::default(),
         }
     }
 
