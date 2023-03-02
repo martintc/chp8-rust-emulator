@@ -5,7 +5,7 @@ use tinyrand::{Rand, StdRand};
 
 pub struct Cpu {
     ram: [u8; 0xfff],
-    vram: [[u8; 64]; 32],
+    pub vram: [[u8; 64]; 32],
     reg: [u8; 0x10], // registers
     i: u16,          // index register
     pc: u16,         // program counter
@@ -50,6 +50,7 @@ impl Cpu {
         let mut inst: u16 = msb << 8;
         inst |= lsb;
         self.pc += 1;
+	// println!("instruction: {:x}", inst);
         match inst & 0xf000 {
             0x0000 => match inst & 0x00ff {
                 0x00e0 => self.op_00e0(inst),
@@ -179,7 +180,9 @@ impl Cpu {
     fn op_7xkk(&mut self, inst: u16) {
         let vx = (inst & 0x0f00) >> 8;
         let value = (inst & 0x00ff) as u8;
-        self.reg[vx as usize] += value;
+	let x = std::num::Wrapping(self.reg[vx as usize]);
+	let kk = std::num::Wrapping(value);
+        self.reg[vx as usize] = (x + kk).0;
     }
 
     // ld - store value in register y into register x
@@ -635,6 +638,28 @@ mod tests {
         assert_eq!(cpu.reg[1], 0x02);
     }
 
+    #[test]
+    fn test_op_7xkk_overflow() {
+        let mut cpu = Cpu::new();
+        let rom: Vec<u8> = [
+            // address 0x200
+            // load value 1 into register 1
+            0x61, 0x02, // address 0x202
+            // vx = vx + kk
+            0x71, 0xff,
+        ]
+        .to_vec();
+        cpu.load_rom(rom);
+        assert_eq!(cpu.pc, 0x200);
+        assert_eq!(cpu.reg[1], 0x00);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x202);
+        assert_eq!(cpu.reg[1], 0x02);
+        cpu.step();
+        assert_eq!(cpu.pc, 0x204);
+        assert_eq!(cpu.reg[1], 0x01);	
+    }
+    
     #[test]
     fn test_op_8xy0() {
         let mut cpu = Cpu::new();
