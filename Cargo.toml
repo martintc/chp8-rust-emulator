@@ -8,4 +8,5 @@ authors = ["Todd Martin <warfox@sdf.org>"]
 
 [dependencies]
 clap = { version = "4.1.6", features = ["derive"] }
+sdl2 = "0.35.2"
 tinyrand = "0.5.0"

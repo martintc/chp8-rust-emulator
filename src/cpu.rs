@@ -48,9 +48,9 @@ impl Cpu {
         self.pc += 1;
         let lsb = self.ram[self.pc as usize] as u16;
         let mut inst: u16 = msb << 8;
-        inst |= lsb;
+	inst |= lsb;
         self.pc += 1;
-	// println!("instruction: {:x}", inst);
+	println!("instruction: {:x}", inst);
         match inst & 0xf000 {
             0x0000 => match inst & 0x00ff {
                 0x00e0 => self.op_00e0(inst),
@@ -313,9 +313,9 @@ impl Cpu {
     // cxkk
     pub fn op_cxkk(&mut self, inst: u16) {
         let vx = (inst & 0x0f00) >> 8;
-        let rand: u8 = self.rand.next_u16() as u8;
-        let val = (inst & 0x00ff) as u8;
-        self.reg[vx as usize] = rand & val;
+        let rand = std::num::Wrapping(self.rand.next_u16() as u8);
+        let val = std::num::Wrapping((inst & 0x00ff) as u8);
+        self.reg[vx as usize] = (rand & val).0;
     }
 
     // drw
@@ -325,12 +325,12 @@ impl Cpu {
         let vx = ((inst & 0x0f00) >> 8) as usize;
         let vy = ((inst & 0x00f0) >> 4) as usize;
         let height = (inst & 0x000f) as usize;
-
-        let mut x_pos = (self.reg[vx] % 64) as usize;
-        let mut y_pos = (self.reg[vy] % 32) as usize;
+	
+        let mut y_pos = (self.reg[vy] % 62) as usize;
 
         self.reg[0xf] = 0;
         for i in 0..height {
+	    let mut x_pos = (self.reg[vx] % 32) as usize;
             let byte: u8 = self.ram[self.i as usize + i];
             let mut mask: u8 = 0x80;
             let mut shift = 7;
@@ -338,18 +338,13 @@ impl Cpu {
                 let pixel = (byte & mask) >> shift;
                 mask >>= 1;
                 shift -= 1;
-                if self.vram[vx][vx] > 0 && pixel > 0 {
+                if self.vram[x_pos][y_pos] > 0 && pixel > 0 {
                     self.reg[0xf] = 1;
                 }
-                if pixel > 0 {
-                    self.vram[vx][vy] = 1;
-                }
-                if pixel == 0 {
-                    self.vram[vx][vy] = 0;
-                }
-                x_pos = (x_pos + 1) % 64;
+		self.vram[x_pos][y_pos] ^= pixel;
+                x_pos = (x_pos + 1) % 32;
             }
-            y_pos = (y_pos + 1) % 32;
+            y_pos = (y_pos + 1) % 64;
         }
     }
 
