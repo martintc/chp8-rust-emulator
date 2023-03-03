@@ -44,13 +44,14 @@ impl Cpu {
 
     pub fn step(&mut self) {
         // let inst: u8 = self.ram[self.pc as usize];
+	println!("address: {:x}", self.pc);
         let msb = self.ram[self.pc as usize] as u16;
         self.pc += 1;
         let lsb = self.ram[self.pc as usize] as u16;
         let mut inst: u16 = msb << 8;
 	inst |= lsb;
         self.pc += 1;
-	println!("instruction: {:x}", inst);
+	println!("\tinstruction: {:x}", inst);
         match inst & 0xf000 {
             0x0000 => match inst & 0x00ff {
                 0x00e0 => self.op_00e0(inst),
@@ -118,8 +119,9 @@ impl Cpu {
     // ret - return from subroutine
     // 00ee
     fn op_00ee(&mut self, _inst: u16) {
+	self.pc = self.stack[self.sp as usize];
         self.sp -= 1;
-        self.pc = self.stack[self.sp as usize];
+        // self.pc = self.stack[self.sp as usize];
     }
 
     // jp - jump to location
@@ -132,17 +134,17 @@ impl Cpu {
     // 2nnn
     fn op_2nnn(&mut self, inst: u16) {
         // need to subtract 2 to get the current instruction being run
-        self.stack[self.sp as usize] = self.pc - 2;
-        self.sp += 1;
+	self.sp += 1;
+        self.stack[self.sp as usize] = self.pc;
         self.pc = inst & 0x0fff;
     }
 
     // se - skip next instruction if Vx = kk
     // 3xkk
     fn op_3xkk(&mut self, inst: u16) {
-        let vx = (inst & 0x0f00) >> 8;
+        let vx = ((inst & 0x0f00) >> 8) as usize;
         let val = (inst & 0x00ff) as u8;
-        if self.reg[vx as usize] == val {
+        if self.reg[vx] == val {
             self.pc += 2;
         }
     }
@@ -150,9 +152,9 @@ impl Cpu {
     // sne - skip next instruction id vx != kk
     // 4xkk
     fn op_4xkk(&mut self, inst: u16) {
-        let vx = (inst & 0x0f00) >> 8;
+        let vx = ((inst & 0x0f00) >> 8) as usize;
         let val = (inst & 0x00ff) as u8;
-        if self.reg[vx as usize] != val {
+        if self.reg[vx] != val {
             self.pc += 2;
         }
     }
@@ -160,9 +162,9 @@ impl Cpu {
     // reg se - skips the next if instruction is vx == vy
     // 5xy0
     fn op_5xy0(&mut self, inst: u16) {
-        let vx = (inst & 0x0f00) >> 8;
-        let vy = (inst & 0x00f0) >> 4;
-        if self.reg[vx as usize] == self.reg[vy as usize] {
+        let vx = ((inst & 0x0f00) >> 8) as usize;
+        let vy = ((inst & 0x00f0) >> 4) as usize;
+        if self.reg[vx] == self.reg[vy] {
             self.pc += 2;
         }
     }
@@ -170,51 +172,51 @@ impl Cpu {
     // ld - put value kk into register vx
     // 6xkk
     fn op_6xkk(&mut self, inst: u16) {
-        let register = (inst & 0x0f00) >> 8;
+        let register = ((inst & 0x0f00) >> 8) as usize;
         let value = (inst & 0x00ff) as u8;
-        self.reg[register as usize] = value;
+        self.reg[register] = value;
     }
 
     // add - add vx by kk
     // 7xkk
     fn op_7xkk(&mut self, inst: u16) {
-        let vx = (inst & 0x0f00) >> 8;
-        let value = (inst & 0x00ff) as u8;
-	let x = std::num::Wrapping(self.reg[vx as usize]);
-	let kk = std::num::Wrapping(value);
-        self.reg[vx as usize] = (x + kk).0;
+        let vx = ((inst & 0x0f00) >> 8) as usize;
+        let value = (inst & 0x00ff) as u16;
+	let x = self.reg[vx] as u16;
+	let result = value + x;
+        self.reg[vx] = result as u8;
     }
 
     // ld - store value in register y into register x
     // 8xy0
     pub fn op_8xy0(&mut self, inst: u16) {
-        let vx = (inst & 0x0f00) >> 8;
-        let vy = (inst & 0x00f0) >> 4;
-        self.reg[vx as usize] = self.reg[vy as usize];
+        let vx = ((inst & 0x0f00) >> 8) as usize;
+        let vy = ((inst & 0x00f0) >> 4) as usize;
+        self.reg[vx] = self.reg[vy];
     }
 
     // or - bit wise or on registers vx and vy where the result goes into vx
     // 8xy1
     pub fn op_8xy1(&mut self, inst: u16) {
-        let vx = (inst & 0x0f00) >> 8;
-        let vy = (inst & 0x00f0) >> 4;
-        self.reg[vx as usize] |= self.reg[vy as usize];
+        let vx = ((inst & 0x0f00) >> 8) as usize;
+        let vy = ((inst & 0x00f0) >> 4) as usize;
+        self.reg[vx] |= self.reg[vy];
     }
 
     // and - bit wise an on rgisters vx and vy with the result going into vx
     // 8xy2
     pub fn op_8xy2(&mut self, inst: u16) {
-        let vx = (inst & 0x0f00) >> 8;
-        let vy = (inst & 0x00f0) >> 4;
-        self.reg[vx as usize] &= self.reg[vy as usize];
+        let vx = ((inst & 0x0f00) >> 8) as usize;
+        let vy = ((inst & 0x00f0) >> 4) as usize;
+        self.reg[vx] &= self.reg[vy];
     }
 
     // xor - bitwise exclusive or on registers vx and vy with the results going into vx
     // 8xy3
     pub fn op_8xy3(&mut self, inst: u16) {
-        let vx = (inst & 0x0f00) >> 8;
-        let vy = (inst & 0x00f0) >> 4;
-        self.reg[vx as usize] ^= self.reg[vy as usize];
+        let vx = ((inst & 0x0f00) >> 8) as usize;
+        let vy = ((inst & 0x00f0) >> 4) as usize;
+        self.reg[vx] ^= self.reg[vy];
     }
 
     // add reg - add register contents of vx and vy
@@ -223,13 +225,13 @@ impl Cpu {
     // 8xy4
     pub fn op_8xy4(&mut self, inst: u16) {
         self.reg[0xf] = 0;
-        let vx = (inst & 0x0f00) >> 8;
-        let vy = (inst & 0x00f0) >> 4;
-        let sum: u16 = self.reg[vx as usize] as u16 + self.reg[vy as usize] as u16;
+        let vx = ((inst & 0x0f00) >> 8) as usize;
+        let vy = ((inst & 0x00f0) >> 4) as usize;
+        let sum: u16 = self.reg[vx] as u16 + self.reg[vy] as u16;
         if sum > 255 {
             self.reg[0xf] = 1;
         }
-        self.reg[vx as usize] = sum as u8 & 0xff;
+        self.reg[vx] = (sum & 0x00ff) as u8;
     }
 
     // sub reg - subtract registers contents vy from vx
@@ -238,24 +240,24 @@ impl Cpu {
     // 8xy5
     pub fn op_8xy5(&mut self, inst: u16) {
         self.reg[0xf] = 0;
-        let vx = (inst & 0x0f00) >> 8;
-        let vy = (inst & 0x00f0) >> 4;
-        if self.reg[vx as usize] > self.reg[vy as usize] {
+        let vx = ((inst & 0x0f00) >> 8) as usize;
+        let vy = ((inst & 0x00f0) >> 4) as usize;
+        if self.reg[vx] > self.reg[vy] {
             self.reg[0xf] = 1;
         }
 
-        let x = std::num::Wrapping(self.reg[vx as usize]);
-        let y = std::num::Wrapping(self.reg[vy as usize]);
-        let z = x - y;
+        let x: i16 = self.reg[vx] as i16;
+        let y: i16 = self.reg[vy] as i16;
+        let z: i16 = x - y;
         // self.reg[vx as usize] -= self.reg[vy as usize];
-        self.reg[vx as usize] = z.0;
+        self.reg[vx as usize] = (z & 0x00ff) as u8;
     }
 
     // shr - shift right by 1
     // 8xy6
     pub fn op_8xy6(&mut self, inst: u16) {
-        let vx = (inst & 0x0f00) >> 8;
-        self.reg[0xf] = self.reg[vx as usize] & 0x1;
+        let vx = ((inst & 0x0f00) >> 8) as usize;
+        self.reg[0xf] = self.reg[vx] & 0x1;
 
         self.reg[vx as usize] >>= 1;
     }
@@ -265,31 +267,32 @@ impl Cpu {
     // 8xy7
     pub fn op_8xy7(&mut self, inst: u16) {
         self.reg[0xf] = 0;
-        let vx = (inst & 0x0f00) >> 8;
-        let vy = (inst & 0x00f0) >> 4;
-        if self.reg[vx as usize] > self.reg[vy as usize] {
+        let vx = ((inst & 0x0f00) >> 8) as usize;
+        let vy = ((inst & 0x00f0) >> 4) as usize;
+        if self.reg[vy] > self.reg[vx] {
             self.reg[0xf] = 1;
         }
-        let x = std::num::Wrapping(self.reg[vx as usize]);
-        let y = std::num::Wrapping(self.reg[vy as usize]);
+        let x = self.reg[vx] as i16;
+        let y = self.reg[vy] as i16;
+	let z: i16 = y - x;
         // self.reg[vx as usize] = self.reg[vy as usize] - self.reg[vx as usize];
-        self.reg[vx as usize] = (y - x).0;
+        self.reg[vx] = (z & 0x00ff) as u8;
     }
 
     // shl
     // 8xye
     pub fn op_8xye(&mut self, inst: u16) {
-        let vx = (inst & 0x0f00) >> 8;
-        self.reg[0xf] = (self.reg[vx as usize] & 0x80) >> 7;
-        self.reg[vx as usize] <<= 1;
+        let vx = ((inst & 0x0f00) >> 8) as usize;
+        self.reg[0xf] = (self.reg[vx] & 0x80) >> 7;
+        self.reg[vx] <<= 1;
     }
 
     // sne - skip next inst if vx != vy
     // 9xy0
     pub fn op_9xy0(&mut self, inst: u16) {
-        let vx = (inst & 0x0f00) >> 8;
-        let vy = (inst & 0x00f0) >> 4;
-        if self.reg[vx as usize] != self.reg[vy as usize] {
+        let vx = ((inst & 0x0f00) >> 8) as usize;
+        let vy = ((inst & 0x00f0) >> 4) as usize;
+        if self.reg[vx] != self.reg[vy] {
             self.pc += 2;
         }
     }
@@ -312,10 +315,11 @@ impl Cpu {
     // interpretor generate random number from 0 to 255, which is then ANDed with kk
     // cxkk
     pub fn op_cxkk(&mut self, inst: u16) {
-        let vx = (inst & 0x0f00) >> 8;
-        let rand = std::num::Wrapping(self.rand.next_u16() as u8);
-        let val = std::num::Wrapping((inst & 0x00ff) as u8);
-        self.reg[vx as usize] = (rand & val).0;
+        let vx = ((inst & 0x0f00) >> 8) as usize;
+        let rand: u16 = self.rand.next_u16();
+        let val: u16 = inst & 0x00ff;
+	let result: u16 = rand & val;
+        self.reg[vx] = (result & 0x00ff) as u8;
     }
 
     // drw
@@ -351,8 +355,8 @@ impl Cpu {
     // skp - skip next instruction if key with the calue of Vx is not pressed
     // ex9e
     pub fn op_ex9e(&mut self, inst: u16) {
-        let vx = (inst & 0x0f00) >> 8;
-        let key = self.reg[vx as usize] as usize;
+        let vx = ((inst & 0x0f00) >> 8) as usize;
+        let key = self.reg[vx] as usize;
         if self.keypad[key] > 0 {
             // research this
             self.pc += 2;
@@ -362,8 +366,8 @@ impl Cpu {
     // skpn
     // exa1
     pub fn op_exa1(&mut self, inst: u16) {
-        let vx = (inst & 0x0f00) >> 8;
-        let key = self.reg[vx as usize] as usize;
+        let vx = ((inst & 0x0f00) >> 8) as usize;
+        let key = self.reg[vx] as usize;
         if self.keypad[key] < 1 {
             self.pc += 2;
         }
@@ -372,8 +376,8 @@ impl Cpu {
     // ld dt - set Vx = delay timer value
     // fx07
     pub fn op_fx07(&mut self, inst: u16) {
-        let vx = (inst & 0x0f00) >> 8;
-        self.reg[vx as usize] = self.dt;
+        let vx = ((inst & 0x0f00) >> 8) as usize;
+        self.reg[vx] = self.dt;
     }
 
     // ld keypress - wait for key press, stoe the value of the key in vx
@@ -420,15 +424,15 @@ impl Cpu {
     // ld set delay - delay time = vx
     // fx15
     pub fn op_fx15(&mut self, inst: u16) {
-        let vx = (inst & 0x0f00) >> 8;
-        self.dt = self.reg[vx as usize];
+        let vx = ((inst & 0x0f00) >> 8) as usize;
+        self.dt = self.reg[vx];
     }
 
     // ld st, set sound timer = vx
     // fx18
     pub fn op_fx18(&mut self, inst: u16) {
-        let vx = (inst & 0x0f00) >> 8;
-        self.st = self.reg[vx as usize];
+        let vx = ((inst & 0x0f00) >> 8) as usize;
+        self.st = self.reg[vx];
     }
 
     // add i, vx
@@ -527,9 +531,9 @@ mod tests {
         cpu.step();
         assert_eq!(cpu.pc, 0x204);
         assert_eq!(cpu.sp, 1);
-        assert_eq!(cpu.stack[cpu.sp as usize - 1], 0x200);
+        assert_eq!(cpu.stack[cpu.sp as usize], 0x202);
         cpu.step();
-        assert_eq!(cpu.pc, 0x200);
+        assert_eq!(cpu.pc, 0x202);
     }
 
     #[test]
@@ -960,7 +964,7 @@ mod tests {
         cpu.step();
         assert_eq!(cpu.pc, 0x206);
         assert_eq!(cpu.reg[1], 0x04);
-        assert_eq!(cpu.reg[0xf], 0x00);
+        assert_eq!(cpu.reg[0xf], 0x01);
     }
 
     #[test]
@@ -990,7 +994,7 @@ mod tests {
         cpu.step();
         assert_eq!(cpu.pc, 0x206);
         assert_eq!(cpu.reg[1], 0xff);
-        assert_eq!(cpu.reg[0xf], 0x01);
+        assert_eq!(cpu.reg[0xf], 0x00);
     }
 
     #[test]
