@@ -44,14 +44,14 @@ impl Cpu {
 
     pub fn step(&mut self) {
         // let inst: u8 = self.ram[self.pc as usize];
-	println!("address: {:x}", self.pc);
+        println!("address: {:x}", self.pc);
         let msb = self.ram[self.pc as usize] as u16;
         self.pc += 1;
         let lsb = self.ram[self.pc as usize] as u16;
         let mut inst: u16 = msb << 8;
-	inst |= lsb;
+        inst |= lsb;
         self.pc += 1;
-	println!("\tinstruction: {:x}", inst);
+        println!("\tinstruction: {:x}", inst);
         match inst & 0xf000 {
             0x0000 => match inst & 0x00ff {
                 0x00e0 => self.op_00e0(inst),
@@ -119,7 +119,7 @@ impl Cpu {
     // ret - return from subroutine
     // 00ee
     fn op_00ee(&mut self, _inst: u16) {
-	self.pc = self.stack[self.sp as usize];
+        self.pc = self.stack[self.sp as usize];
         self.sp -= 1;
         // self.pc = self.stack[self.sp as usize];
     }
@@ -134,7 +134,7 @@ impl Cpu {
     // 2nnn
     fn op_2nnn(&mut self, inst: u16) {
         // need to subtract 2 to get the current instruction being run
-	self.sp += 1;
+        self.sp += 1;
         self.stack[self.sp as usize] = self.pc;
         self.pc = inst & 0x0fff;
     }
@@ -182,8 +182,8 @@ impl Cpu {
     fn op_7xkk(&mut self, inst: u16) {
         let vx = ((inst & 0x0f00) >> 8) as usize;
         let value = (inst & 0x00ff) as u16;
-	let x = self.reg[vx] as u16;
-	let result = value + x;
+        let x = self.reg[vx] as u16;
+        let result = value + x;
         self.reg[vx] = result as u8;
     }
 
@@ -274,7 +274,7 @@ impl Cpu {
         }
         let x = self.reg[vx] as i16;
         let y = self.reg[vy] as i16;
-	let z: i16 = y - x;
+        let z: i16 = y - x;
         // self.reg[vx as usize] = self.reg[vy as usize] - self.reg[vx as usize];
         self.reg[vx] = (z & 0x00ff) as u8;
     }
@@ -318,7 +318,7 @@ impl Cpu {
         let vx = ((inst & 0x0f00) >> 8) as usize;
         let rand: u16 = self.rand.next_u16();
         let val: u16 = inst & 0x00ff;
-	let result: u16 = rand & val;
+        let result: u16 = rand & val;
         self.reg[vx] = (result & 0x00ff) as u8;
     }
 
@@ -329,12 +329,12 @@ impl Cpu {
         let vx = ((inst & 0x0f00) >> 8) as usize;
         let vy = ((inst & 0x00f0) >> 4) as usize;
         let height = (inst & 0x000f) as usize;
-	
+
         let mut y_pos = (self.reg[vy] % 62) as usize;
 
         self.reg[0xf] = 0;
         for i in 0..height {
-	    let mut x_pos = (self.reg[vx] % 32) as usize;
+            let mut x_pos = (self.reg[vx] % 32) as usize;
             let byte: u8 = self.ram[self.i as usize + i];
             let mut mask: u8 = 0x80;
             let mut shift = 7;
@@ -345,7 +345,7 @@ impl Cpu {
                 if self.vram[x_pos][y_pos] > 0 && pixel > 0 {
                     self.reg[0xf] = 1;
                 }
-		self.vram[x_pos][y_pos] ^= pixel;
+                self.vram[x_pos][y_pos] ^= pixel;
                 x_pos = (x_pos + 1) % 32;
             }
             y_pos = (y_pos + 1) % 64;
@@ -656,9 +656,9 @@ mod tests {
         assert_eq!(cpu.reg[1], 0x02);
         cpu.step();
         assert_eq!(cpu.pc, 0x204);
-        assert_eq!(cpu.reg[1], 0x01);	
+        assert_eq!(cpu.reg[1], 0x01);
     }
-    
+
     #[test]
     fn test_op_8xy0() {
         let mut cpu = Cpu::new();
