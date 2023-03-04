@@ -492,7 +492,7 @@ mod tests {
     #[test]
     fn test_op_00e0() {
         let mut cpu = Cpu::new();
-        cpu.vram = [[0x1; 64]; 32];
+        cpu.vram = [[0x1; 32]; 64];
         for i in 0..cpu.vram.len() {
             for j in 0..cpu.vram[0].len() {
                 assert_eq!(cpu.vram[i][j], 0x1);
