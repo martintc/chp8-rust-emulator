@@ -15,7 +15,7 @@ struct Args {
 
 fn main() -> Result<(), String> {
     let args = Args::parse();
-
+    
     if args.rom_path.is_empty() {
         return Ok(());
     }
@@ -56,7 +56,7 @@ fn main() -> Result<(), String> {
     println!("window is now opened....");
 
     let mut event_pump = sdl_context.event_pump()?;
-
+    
     'running: loop {
         canvas.set_draw_color(sdl2::pixels::Color::RGB(0, 0, 0));
         canvas.clear();
@@ -72,8 +72,8 @@ fn main() -> Result<(), String> {
         }
         cpu.step();
         canvas.set_draw_color(Color::RGB(255, 255, 255));
-        for i in 0..32 {
-            for j in 0..64 {
+        for i in 0..64 {
+            for j in 0..32 {
                 if cpu.vram[i][j] > 0 {
                     canvas.fill_rect(Rect::new(i as i32 * 12, j as i32 * 12, 12, 12))?;
                 }
