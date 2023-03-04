@@ -5,7 +5,7 @@ use tinyrand::{Rand, StdRand};
 
 pub struct Cpu {
     ram: [u8; 0xfff],
-    pub vram: [[u8; 64]; 32],
+    pub vram: [[u8; 32]; 64],
     reg: [u8; 0x10], // registers
     i: u16,          // index register
     pc: u16,         // program counter
@@ -21,7 +21,7 @@ impl Cpu {
     pub fn new() -> Self {
         Self {
             ram: [0x0; 0xfff],
-            vram: [[0x0; 64]; 32],
+            vram: [[0x0; 32]; 64],
             reg: [0x0; 0x10],
             i: 0x0,
             pc: 0x200, // initial start adress once ROM is loaded
@@ -44,14 +44,12 @@ impl Cpu {
 
     pub fn step(&mut self) {
         // let inst: u8 = self.ram[self.pc as usize];
-        println!("address: {:x}", self.pc);
         let msb = self.ram[self.pc as usize] as u16;
         self.pc += 1;
         let lsb = self.ram[self.pc as usize] as u16;
         let mut inst: u16 = msb << 8;
         inst |= lsb;
         self.pc += 1;
-        println!("\tinstruction: {:x}", inst);
         match inst & 0xf000 {
             0x0000 => match inst & 0x00ff {
                 0x00e0 => self.op_00e0(inst),
@@ -113,7 +111,7 @@ impl Cpu {
     // cls - clear the display
     // 00e0
     fn op_00e0(&mut self, _inst: u16) {
-        self.vram = [[0x0; 64]; 32];
+        self.vram = [[0x0; 32]; 64];
     }
 
     // ret - return from subroutine
@@ -330,12 +328,12 @@ impl Cpu {
         let vy = ((inst & 0x00f0) >> 4) as usize;
         let height = (inst & 0x000f) as usize;
 
-        let mut y_pos = (self.reg[vy] % 62) as usize;
+        let mut y_pos = (self.reg[vy] % 32) as usize;
 
         self.reg[0xf] = 0;
-        for i in 0..height {
-            let mut x_pos = (self.reg[vx] % 32) as usize;
-            let byte: u8 = self.ram[self.i as usize + i];
+        for idx in 0..height {
+            let mut x_pos = (self.reg[vx] % 64) as usize;
+            let byte: u8 = self.ram[self.i as usize + idx];
             let mut mask: u8 = 0x80;
             let mut shift = 7;
             for _ in 0..8 {
@@ -346,9 +344,9 @@ impl Cpu {
                     self.reg[0xf] = 1;
                 }
                 self.vram[x_pos][y_pos] ^= pixel;
-                x_pos = (x_pos + 1) % 32;
+                x_pos = (x_pos + 1) % 64;
             }
-            y_pos = (y_pos + 1) % 64;
+            y_pos = (y_pos + 1) % 32;
         }
     }
 
